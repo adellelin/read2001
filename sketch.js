@@ -8,11 +8,12 @@ var lexicon, markov;
 var droppingPitch;
 var time, timePass = 0;
 var starChild, starChildSpr;
-var resetTime = 30000;
+var resetTime = 45  000;
 // speech variables
 var myVoice = new p5.Speech();
 var listbutton;
 var myTime = 0;
+var textSize35;
 
 function preload() {
   lines = loadStrings("texts/space.txt");
@@ -23,9 +24,19 @@ function preload() {
 function setup() {
   
   createCanvas(screen.width, screen.height);
-  instructions();
-  //console.log(myVoice.listVoices());
-    for (var k in counts) {
+  lexicon = new RiLexicon();
+  markov = new RiMarkov(4);
+  markov.loadText(lines.join(' '));
+  // goes through parts of speech in the sentence
+  var params = {
+    ignoreStopWords: true,
+    ignoreCase: true,
+    ignorePunctuation: true
+  };
+  counts = RiTa.concordance(lines.join(" "), params);
+  // gets the return value of the total V
+  total = totalValues(counts);
+  for (var k in counts) {
     if (counts.hasOwnProperty(k)) {
       var tags = RiTa.getPosTags(k);
       if (tags[0] == 'nn') {
@@ -33,33 +44,38 @@ function setup() {
       }
     }
   }
+  instructions();
+  //console.log(myVoice.listVoices());
 }
 
 function draw() {
   //noLoop();
-  console.log(timeStart);
+  //console.log(timeStart);
   textAlign(CENTER);
   noStroke();
-  // set pitch
-
+  
   var currentMillis = millis();
   if (currentMillis - startMillis < resetTime) {
     myTime += 1;
   }
+  // set pitch
   droppingPitch = getBaseLog(myTime, .5);
-  console.log(droppingPitch * 2 + 15);
+  //console.log(droppingPitch * 2 + 15);
   if (currentMillis - startMillis >= resetTime) {
     //fill(0);
     //rect(0, 0, screen.width, screen.height);
     //starChildFn();
     scale(0.8);
-    tint(255, 200); 
-    image(starChildSpr, random(-400,0), random(-50,0));
+    tint(255, random(150,200)); 
+    image(starChildSpr, -200, 0);
     if(currentMillis - startMillis >= resetTime + 300){
+      textSize(35);
       instructions();
       timeStart = 0;
       myTime = 0;
+      //counts = 0;
       myVoice.cancel();
+     
     }
   }
   drawSprites();
@@ -80,7 +96,7 @@ function sayWord() {
   fill(254, 250, 67);
   if (timeStart == 0) {
     startMillis = millis();
-    console.log(startMillis);
+    //console.log(startMillis);
   }
   textAlign(CENTER);
   textSize(24);
@@ -89,10 +105,9 @@ function sayWord() {
   myVoice.setPitch(droppingPitch);
   myVoice.setVoice(Math.floor(random(myVoice.voices.length)));
   myVoice.setRate(droppingPitch * 2 + 20);
-  
   myVoice.speak(lines);
   //draw adjectives in background
-  
+  push();
   for (var k in counts) {
     if (counts.hasOwnProperty(k)) {
       if (counts[k] / total > 0.001) {
@@ -102,6 +117,7 @@ function sayWord() {
       }
     }
   }
+  pop();
 }
 
 function mousePressed() {
@@ -128,27 +144,12 @@ function starChildFn() {
 }
 
 function instructions (){
+  //textSize35 = true;
   background(250, 3, 11);
   textFont(myFont);
-  textSize(35);
   var instructions = "Click for HAL Poetry Reading";
-  lexicon = new RiLexicon();
-  markov = new RiMarkov(4);
-  markov.loadText(lines.join(' '));
-  // goes through parts of speech in the sentence
-  var params = {
-    ignoreStopWords: true,
-    ignoreCase: true,
-    ignorePunctuation: true
-  };
-  counts = RiTa.concordance(lines.join(" "), params);
-  // gets the return value of the total V
-  total = totalValues(counts);
- 
   fill(254, 250, 67);
-
-  //image(starChildSpr, 0, 0);
+  textSize(35);
   textAlign(LEFT);
-  text(instructions, screen.width / 3, screen.height / 2 - 100);
-  console.log(instructions.width);
+  text(instructions, width/ 2 - 100, height / 2 - 50);
 }
